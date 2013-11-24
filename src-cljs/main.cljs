@@ -22,7 +22,7 @@
                        (list (first path) (last path))))))
 
 (defn nth-and-rest [index seq]
-  (list (nth seq index) (into (take index seq) (drop (inc index) seq))))
+  (vector (nth seq index) (into (take index seq) (drop (inc index) seq))))
 
 (defn least-in-seq [prefix seq]
   (loop [seq seq least (first seq)]
@@ -38,25 +38,50 @@
 ;;This algorithm is O(!n) so it's not really worth optimizing it so that it's 
 ;;tail recursive.
 (defn exhaust-permutations 
-  "Returns a list of lists representing every possible permutation of the items in 
+  "Returns a lazy-seq of lists representing every possible permutation of the items in 
    seq."
-  [seq]
-  (if (not-empty seq)
-    (reduce into
-           (for [index (range 0 (count seq))]
-             (let [[item rest] (nth-and-rest index seq)]
-               (for [list (exhaust-permutations rest)]
-                 (conj list item)))))
-    [nil]))
+  [points]
+  (when-let [s (seq points)]
+    (if (> (count s) 1)
+      (apply concat
+             (for [index (range 0 (count s))]
+               (lazy-seq
+                (let [[item rest] (nth-and-rest index s)]
+                  (for [list (exhaust-permutations rest)]
+                    (conj list item))))))
+      [s])))
 
-(defn exhaustive-sort [points]
-  (->> points
-       exhaust-permutations
-       (least-in-seq path-distance)))
+(defn exhaust-permutations-less-head
+  [points]
+  (lazy-seq
+   (when-let [s (seq points)]
+     (for [list (exhaust-permutations (rest s))]
+       (cons (first s) list)))))
+
+(defn best-paths [paths & [old-path]]
+  "Returns a lazy-seq of paths each representing the best path so far;
+  ie. filter out all paths not better than previous paths."
+  (lazy-seq
+   (when-let [s (seq paths)]
+     (if (or (empty? old-path)
+              (< (path-distance (first s))
+                 (path-distance old-path)))
+       (cons (first s) (best-paths (rest s) (first s)))
+       (best-paths (rest s) old-path)))))
+
+(defn all-paths-plus-best [paths & [old-best]]
+  (lazy-seq
+   (if-let [s (seq paths)]
+     (if (or (empty? old-best)
+             (< (path-distance (first s))
+                (path-distance old-best)))
+       (cons (first s) (all-paths-plus-best (rest s) (first s)))
+       (cons (first s) (all-paths-plus-best (rest s) old-best)))
+     [old-best])))
 
 ;;opt sort
  
-(defn path-to-edges 
+(defn points-to-edges 
   "Returns a list of pairs which represent all possible edges between
   points in passed in sequence of points."
   [path]
@@ -99,13 +124,12 @@
   (domacro/do-graph [graph point nil result []]
             (conj result point)))
 
-
-(defn greedy-selection 
+(defn shortest-edge-first
   "Builds the path by selecting connections between points first."
-  [edges]
-  (let [p-count (count (set (reduce into edges)))]
+  [points]
+  (let [p-count (count points)]
     (graph-to-path
-     (loop [edges (sort-edges edges) result-graph {}]
+     (loop [edges (sort-edges (points-to-edges points)) result-graph {}]
        (if (empty? edges)
          result-graph
          (let [[shortest & rest] edges
@@ -123,6 +147,16 @@
              (recur rest
                     result-graph))))))))
 
+(defn nearest-point-first
+  "Builds the path by selecting nearest points first."
+  [points]
+  (let [[point points] (nth-and-rest (rand-int (count points)) points)]
+    (loop [path [point] points points]
+      (if (not-empty points)
+        (let [point (least-in-seq #(distance % (peek path)) points)]
+          (recur (conj path point) (remove #(= % point) points)))
+        path))))
+                      
 (defn optimize 
   "This will remove obvious inefficiencies"
   [path]
@@ -158,18 +192,10 @@
             (recur path x (inc y))))
     path))
 
-(defn opt-sort [seq]
-  (let [old-seq seq
-        seq (-> seq
-                path-to-edges
-                greedy-selection
-                ;optimize
-                )]
-    (if-not (= (count old-seq) (count seq))
-      (js/console (str "lost points: " old-seq ", " seq)))
-    seq))
 
 (def points (atom #{}))
+
+(def point-states (atom '()))
 
 ;(defn print-points []
   ;(-> (d3/select
@@ -195,25 +221,31 @@
       (.y #(:y %))
       (.interpolate "linear-closed")))
 
-(defn print-path [points]
-  (-> (d3/select "svg#field")
-      (.selectAll "path")
-      (.transition)
-      (.attr "d" (line-function (into-array points)))
-      (.attr "stroke" "gray")
-      (.attr "strokewidth" 2)
-      (.attr "fill" "none")))
+(defn print-paths [paths]
+  (when-let [paths (seq paths)]
+    (console/log (str (first paths)))
+    (-> (d3/select "svg#field")
+        (.selectAll "path")
+        (.transition)
+        (.delay 100)
+        (.duration 1000)
+        (.attr "d" (line-function (into-array (first paths))))
+        (.attr "stroke" "gray")
+        (.attr "strokewidth" 2)
+        (.attr "fill" "none")
+        (.each "end" #(print-paths (rest paths))))))
       
 
 (def svg (-> (d3/select "svg#field")
              (.on "click" #(this-as event 
                                     (swap! points conj 
-                                           {:x (first (d3/mouse event)) 
-                                            :y (second (d3/mouse event))})
+                                           {:x (int (first (d3/mouse event)))
+                                            :y (int (second (d3/mouse event)))})
+                                    (console/log (str @points))
                                     (print-circles @points)
-                                    (print-path (if (> (count @points) 2)
-                                                  (exhaustive-sort (shuffle @points))
-                                                  @points))))))
+                                    (print-paths (all-paths-plus-best 
+                                                  (exhaust-permutations-less-head 
+                                                   @points)))))))
 
 
 ;swap! points
