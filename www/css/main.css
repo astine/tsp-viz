@@ -125,6 +125,10 @@ body {
 #header {
 }
 
+#footer {
+    font-size: 65%;
+}
+
 h1 {
     font-weight: 300;
 }
