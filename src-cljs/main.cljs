@@ -2,6 +2,10 @@
   (:use [jayq.core :only [$ inner]])
   (:require-macros [tsp-viz.domacro :as domacro]))
 
+(defn greater [x y & [comp pred]]
+  (if ((or comp >) ((or pred identity) x) ((or pred identity) y))
+    x y))
+
 (defn distance
   "Distance between two points on a two dimensional plane"
   [{x1 :x y1 :y}
@@ -97,55 +101,55 @@
                                                   (second %)))
                      edges))))
 
-(defn points-connected? 
-  "Given an incomplete graph, show whether points p1 and p2 are connected."
-  [graph p1 p2]
-  (or (= (first (graph p1)) p2)
-      (= (second (graph p1)) p2)
-      (loop [point (first (graph p1)) last-point p1 false-on-nil false]
-        (let [check-point (if (= (first (graph point)) last-point)
-                            (second (graph point))
-                            (first (graph point)))]
-          (cond (= check-point p2)
-                true
-                (= check-point p1)
-                false
-                (= check-point nil)
-                (if false-on-nil
-                  false
-                  (recur (second (graph p1)) p1 true))
-                :else
-                (recur check-point point false-on-nil))))))
+;(defn points-connected? 
+;  "Given an incomplete graph, show whether points p1 and p2 are connected."
+;  [graph p1 p2]
+;  (or (= (first (graph p1)) p2)
+;      (= (second (graph p1)) p2)
+;      (loop [point (first (graph p1)) last-point p1 false-on-nil false]
+;        (let [check-point (if (= (first (graph point)) last-point)
+;                            (second (graph point))
+;                            (first (graph point)))]
+;          (cond (= check-point p2)
+;                true
+;                (= check-point p1)
+;                false
+;                (= check-point nil)
+;                (if false-on-nil
+;                  false
+;                  (recur (second (graph p1)) p1 true))
+;                :else
+;                (recur check-point point false-on-nil))))))
 
 
-(defn graph-to-path 
-  "Covert graph to sequence."
-  [graph]
-  (domacro/do-graph [graph point nil result []]
-            (conj result point)))
+;(defn graph-to-path 
+;  "Covert graph to sequence."
+;  [graph]
+;  (domacro/do-graph [graph point nil result []]
+;            (conj result point)))
 
-(defn shortest-edge-first
-  "Builds the path by selecting connections between points first."
-  [points]
-  (let [p-count (count points)]
-    (graph-to-path
-     (loop [edges (sort-edges (points-to-edges points)) result-graph {}]
-       (if (empty? edges)
-         result-graph
-         (let [[shortest & rest] edges
-               [p1 p2] shortest]
-           (if (and (< (count (result-graph p1)) 2)
-                    (< (count (result-graph p2)) 2)
-                    (or (and (= p-count (count result-graph))
-                             (= (apply + (map count (vals result-graph))) 
-                                (- (* (count result-graph) 2) 2)))
-                        (not (points-connected? result-graph p1 p2))))
-             (recur rest
-                    (assoc result-graph
-                      p1 (conj (result-graph p1) p2)
-                      p2 (conj (result-graph p2) p1)))
-             (recur rest
-                    result-graph))))))))
+;(defn shortest-edge-first
+;  "Builds the path by selecting connections between points first."
+;  [points]
+;  (let [p-count (count points)]
+;    (graph-to-path
+;     (loop [edges (sort-edges (points-to-edges points)) result-graph {}]
+;       (if (empty? edges)
+;         result-graph
+;         (let [[shortest & rest] edges
+;               [p1 p2] shortest]
+;           (if (and (< (count (result-graph p1)) 2)
+;                    (< (count (result-graph p2)) 2)
+;                    (or (and (= p-count (count result-graph))
+;                             (= (apply + (map count (vals result-graph))) 
+;                                (- (* (count result-graph) 2) 2)))
+;                        (not (points-connected? result-graph p1 p2))))
+;             (recur rest
+;                    (assoc result-graph
+;                      p1 (conj (result-graph p1) p2)
+;                      p2 (conj (result-graph p2) p1)))
+;             (recur rest
+;                    result-graph))))))))
 
 (defn nearest-point-first
   "Builds the path by selecting nearest points first."
@@ -157,40 +161,40 @@
           (recur (conj path point) (remove #(= % point) points)))
         path))))
                       
-(defn optimize 
-  "This will remove obvious inefficiencies"
-  [path]
-  (if (> (count path) 3)
-    (loop [path path 
-           x 0
-           y 2]
-      (cond (= (count path) (inc y))
-            (cond (= (+ x 3) y)
-                  path
-                  (> (distance (nth path x)
-                               (nth path (inc x)))
-                     (distance (nth path x)
-                               (nth path y)))
-                  (recur (into (take (inc x) path)
-                               (reverse (drop (inc x) path)))
-                         0 2)
-                  :else
-                  (recur path (inc x) (+ x 2)))
-            (> (+ (distance (nth path x)
-                            (nth path (inc x)))
-                  (distance (nth path y)
-                            (nth path (inc y))))
-               (+ (distance (nth path x)
-                            (nth path y))
-                  (distance (nth path (inc x))
-                            (nth path (inc y)))))
-            (recur (reduce into [(take (inc x) path)
-                                 (reverse (take (- y x) (drop (inc x) path)))
-                                 (drop (inc y) path)]) 
-                   0 2)
-            :else
-            (recur path x (inc y))))
-    path))
+;(defn optimize 
+;  "This will remove obvious inefficiencies"
+;  [path]
+;  (if (> (count path) 3)
+;    (loop [path path 
+;           x 0
+;           y 2]
+;      (cond (= (count path) (inc y))
+;            (cond (= (+ x 3) y)
+;                  path
+;                  (> (distance (nth path x)
+;                               (nth path (inc x)))
+;                     (distance (nth path x)
+;                               (nth path y)))
+;                  (recur (into (take (inc x) path)
+;                               (reverse (drop (inc x) path)))
+;                         0 2)
+;                  :else
+;                  (recur path (inc x) (+ x 2)))
+;            (> (+ (distance (nth path x)
+;                            (nth path (inc x)))
+;                  (distance (nth path y)
+;                            (nth path (inc y))))
+;               (+ (distance (nth path x)
+;                            (nth path y))
+;                  (distance (nth path (inc x))
+;                            (nth path (inc y)))))
+;            (recur (reduce into [(take (inc x) path)
+;                                 (reverse (take (- y x) (drop (inc x) path)))
+;                                 (drop (inc y) path)]) 
+;                   0 2)
+;            :else
+;            (recur path x (inc y))))
+;    path))
 
 
 (def points (atom #{}))
@@ -221,20 +225,100 @@
       (.y #(:y %))
       (.interpolate "linear-closed")))
 
-(defn print-paths [paths]
+(defn rebind-all [object selector data]
+  (let [selection (-> object
+                      (.selectAll selector)
+                      (.data (into-array data)))]
+    (-> selection
+        (.exit)
+        (.remove))
+    (-> selection
+        (.enter)
+        (.append selector))
+    selection))
+
+(defn print-path [path-object path]
+  (-> path-object
+      (.transition)
+      (.delay 100)
+      (.duration 1000)
+      (.attr "d" (line-function (into-array path)))))
+
+(defn print-path-html-row [name path iteration]
+  (str "<th>" (clojure.string/capitalize name) "</th>"
+       "<td>" (/ (Math/round (* 100 (path-distance path))) 100) "</td>"
+       "<td>" iteration "</td>") )
+
+(defn print-paths [path-names paths iterations colors callback]
+  (let [paths (map #(hash-map :name %1 :path %2 :iteration %3 :color %4)
+                   path-names paths iterations colors)]
+    (console/log (str paths))
+    (doseq [{:keys [name path color]} (butlast paths)]
+      (-> (d3/select "svg#field")
+          (.select (str "path#" name))
+          (.style "stroke" color)
+          (print-path path)))
+    (let [{:keys [name path color]} (last paths)]
+      (-> (d3/select "svg#field")
+          (.select (str "path#" name))
+          (.style "stroke" color)
+          (print-path path)
+          (.each "end" 
+                 #(do (-> (d3/select "table#demo-info tbody")
+                          (rebind-all "tr" paths)
+                          (.style "color" (fn [%] (:color %)))
+                          (.html (fn [{:keys [name path iteration]}]
+                                   (print-path-html-row name path iteration))))
+                      (callback))
+                 )))))
+        
+
+(defn end-path-animation [path iteration]
+  (console/log "end animation")
+  (-> (d3/select "svg#field")
+      (.select "path#bestyet")
+      (.style "stroke" "red")
+      (print-path path))
+  (-> (d3/select "svg#field")
+      (.select "path#working")
+      (.style "stroke" "blue")
+      (print-path path)
+      (.each "end" 
+             #(do (-> (d3/select "table#demo-info tbody")
+                      (rebind-all "tr" [{:name "Final" :path path :iteration iteration}])
+                      (.style "color" "green")
+                      (.html (fn [{:keys [name path iteration]}]
+                               (print-path-html-row name path iteration))))
+                  (-> (d3/select "svg#field")
+                      (.selectAll "path")
+                      (.style "stroke" "green"))))))
+
+(defn path-animation-step [paths iterator previous-best previous-iteration]
+  (if-let [paths (seq paths)]
+    (let [best-path (greater (first paths)
+                             previous-best
+                             < path-distance)]
+      (console/log "Part animation")
+      (print-paths ["bestyet" "working"]
+                   [best-path (first paths)]
+                   [previous-iteration (first iterator)]
+                   ["red" "blue"]
+                   #(path-animation-step 
+                     (rest paths) (rest iterator) best-path
+                     (if (= best-path previous-best) 
+                       previous-iteration (first iterator)))))
+    (end-path-animation previous-best previous-iteration)))
+
+(defn animate-paths [paths]
   (when-let [paths (seq paths)]
-    (console/log (str (first paths)))
-    (-> (d3/select "svg#field")
-        (.selectAll "path")
-        (.transition)
-        (.delay 100)
-        (.duration 1000)
-        (.attr "d" (line-function (into-array (first paths))))
-        (.attr "stroke" "gray")
-        (.attr "strokewidth" 2)
-        (.attr "fill" "none")
-        (.each "end" #(print-paths (rest paths))))))
-      
+    (console/log "Start animation")
+    (print-paths ["bestyet" "working"]
+                 [(first paths) (first paths)]
+                 [1 1]
+                 ["red" "blue"]
+                 #(path-animation-step 
+                   (rest paths) (iterate inc 2) 
+                   (first paths) 1))))
 
 (def svg (-> (d3/select "svg#field")
              (.on "click" #(this-as event 
@@ -243,18 +327,7 @@
                                             :y (int (second (d3/mouse event)))})
                                     (console/log (str @points))
                                     (print-circles @points)
-                                    (print-paths (all-paths-plus-best 
-                                                  (exhaust-permutations-less-head 
-                                                   @points)))))))
+                                    (animate-paths (exhaust-permutations-less-head 
+                                                    @points))))))
 
 
-;swap! points
-                    ;conj
-                    ;(->> (d3/select "svg#field")
-                         ;(d3/mouse)
-                         ;(zipmap [:x :y])))))
-                 
-;(-> (d3/select "body")
-    ;.transition
-    ;(.duration 750)
-    ;(.style "background-color" "white"))

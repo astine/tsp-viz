@@ -22,8 +22,31 @@
         <![endif]-->
 
         <!-- Add your site or application content here -->
-        <p>TSP demo</p>
-	<svg id="field"><path></path></svg>
+	<div id="content">
+	  <div id="header">
+            <h1>The Traveling Salesman Problem</h1>
+	  </div>
+	  <div id="demo">
+	    <div id="demo-header">
+	      <p id="instructions">Click on the space to add nodes; the simulation will begin immediately.</p>
+	    </div>
+	    <svg id="field">
+	      <path id="bestyet"></path>
+	      <path id="working"></path>
+	    </svg>
+	    <table id="demo-info">
+	      <thead>
+		<tr><td>&nbsp;</td><th>Path Length</th><th>Iteration</th></tr>
+	      </thead>
+	      <tbody>
+	      </tbody>
+	    </table>
+	  </div>
+	  <div id="description-text">
+	    <p>This is a demo of the TSP problem. Here is some info about the TSP problem.</p>
+	    <div class="press"></div>
+	  </div>
+	</div>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.2.min.js"><\/script>')</script>

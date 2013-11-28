@@ -98,22 +98,81 @@ textarea {
    ========================================================================== */
 
 
+/*
+Primary Color:
+#92356A	#673953	#550D36	#D577AC	#D599BB
+
+Secondary Color A:
+#308351	#335C44	#0B4D26	#74CF99	#94CFAC
+
+Secondary Color B:
+#B6B042	#807D47	#6B6510	#E3DD7F	#E3DFA2
+
+header background
+header text
+content background
+content text
 
 
+
+*/
+
+body {
+}
+
+#header {
+}
+
+#content {
+    width: 66em;
+    margin: auto;
+}
+
+#demo {
+    clear: both;
+}
+
+#demo-header p#instructions {
+    width: 20em;
+    font-size: 75%;
+}
+
+#demo-info {
+    float: right;
+    width: 20em;
+    text-align: right;
+    clear: both;
+}
+
+#description-text {
+    clear: both;
+    margin-top: 5em;
+}
+
+#main-text p {
+}
+
+.press {
+    clear: both;
+}
 
 svg#field {
-    width: 640px;
-    height: 480px;
-    border: solid;
+    width: 66em;
+    height: 50em;
+    border: solid #550636;
+    background: white;
 }
 
 circle {
-    fill: #000;
+    fill: #black;
     pointer-events: none;
 }
 
-
-
+path {
+    fill: none;
+    stroke-width: 2px;
+    stroke-opacity: 0.5;
+}
 
 
 
