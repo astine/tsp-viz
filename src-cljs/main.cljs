@@ -6,6 +6,25 @@
   (if ((or comp >) ((or pred identity) x) ((or pred identity) y))
     x y))
 
+(defn human-readable-interval [seconds]
+	(cond (> 60 seconds)
+	      (str seconds " Seconds")
+	      (> 3600 seconds)
+	      (str (Math/round (/ seconds 60)) " Minutes")
+	      (> 86400 seconds)
+	      (str (Math/round (/ seconds 3600)) " Hours")
+	      (> 604800 seconds)
+	      (str (Math/round (/ seconds 86400)) " Days")
+	      (> 2419200 seconds)
+	      (str (Math/round (/ seconds 604800)) " Weeks")
+	      (> 31449600 seconds)
+	      (str (Math/round (/ seconds 2419200)) " Months")
+              :else
+	      (str (Math/round (/ seconds 31449600)) " Years")))
+
+(defn factorial [number]
+  (reduce * (range 1 (inc number))))
+
 (defn distance
   "Distance between two points on a two dimensional plane"
   [{x1 :x y1 :y}
@@ -296,12 +315,18 @@
                       (.selectAll "path")
                       (.style "stroke" "green"))))))
 
-(defn path-animation-step [paths iterator previous-best previous-iteration]
+(defn path-animation-step [paths iterator previous-best previous-iteration est-iterations]
   (if-let [paths (seq paths)]
     (let [best-path (greater (first paths)
                              previous-best
                              < path-distance)]
       (console/log "Part animation")
+      (-> (d3/select "table#demo-stats tbody")
+          (rebind-all "tr" [[est-iterations 
+                             (human-readable-interval 
+                              (- est-iterations (dec (first iterator))))]])
+          (.html (fn [[comp time]]
+                 (str "<td>" comp "</td><td>" time "</td>"))))
       (print-paths ["bestyet" "working"]
                    [best-path (first paths)]
                    [previous-iteration (first iterator)]
@@ -309,19 +334,24 @@
                    #(path-animation-step 
                      (rest paths) (rest iterator) best-path
                      (if (= best-path previous-best) 
-                       previous-iteration (first iterator)))))
+                       previous-iteration (first iterator))
+                     est-iterations)))
     (end-path-animation previous-best previous-iteration)))
 
-(defn animate-paths [paths]
+(defn animate-paths [paths estimated-complexity]
   (when-let [paths (seq paths)]
     (console/log "Start animation")
+    (-> (d3/select "table#demo-stats tbody")
+        (rebind-all "tr" [[estimated-complexity (human-readable-interval estimated-complexity)]])
+        (.html (fn [[comp time]]
+                 (str "<td>" comp "</td><td>" time "</td>"))))
     (print-paths ["bestyet" "working"]
                  [(first paths) (first paths)]
                  [1 1]
                  ["red" "blue"]
                  #(path-animation-step 
                    (rest paths) (iterate inc 2) 
-                   (first paths) 1))))
+                   (first paths) 1 estimated-complexity))))
 
 (def svg (-> (d3/select "svg#field")
              (.on "click" #(this-as event 
@@ -331,5 +361,5 @@
                                     (console/log (str @points))
                                     (print-circles @points)
                                     (animate-paths (exhaust-permutations-less-head 
-                                                    @points))))))
+                                                    @points) (factorial (dec (count @points))))))))
 

@@ -118,9 +118,15 @@ content text
 */
 
 body {
+    font-family: "Helvetica Neue", Helvetica, sans-serif;
+    font-weight: 300;
 }
 
 #header {
+}
+
+h1 {
+    font-weight: 300;
 }
 
 #content {
@@ -144,12 +150,16 @@ body {
     clear: both;
 }
 
+#demo-stats {
+    float: right;
+    width: 25em;
+    text-align: right;
+    clear: both;
+}
+
 #description-text {
     clear: both;
     margin-top: 5em;
-}
-
-#main-text p {
 }
 
 .press {
