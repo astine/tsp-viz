@@ -56,7 +56,7 @@
 
 ;;opt sort
  
-(defn path-to-edges 
+(defn points-to-edges 
   "Returns a list of pairs which represent all possible edges between
   points in passed in sequence of points."
   [path]
@@ -102,10 +102,10 @@
 
 (defn greedy-selection 
   "Builds the path by selecting connections between points first."
-  [edges]
-  (let [p-count (count (set (reduce into edges)))]
+  [points]
+  (let [p-count (count points)]
     (graph-to-path
-     (loop [edges (sort-edges edges) result-graph {}]
+     (loop [edges (sort-edges (points-to-edges points)) result-graph {}]
        (if (empty? edges)
          result-graph
          (let [[shortest & rest] edges
@@ -122,6 +122,7 @@
                       p2 (conj (result-graph p2) p1)))
              (recur rest
                     result-graph))))))))
+
 
 (defn optimize 
   "This will remove obvious inefficiencies"
@@ -161,7 +162,6 @@
 (defn opt-sort [seq]
   (let [old-seq seq
         seq (-> seq
-                path-to-edges
                 greedy-selection
                 ;optimize
                 )]
