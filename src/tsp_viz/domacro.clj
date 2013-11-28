@@ -1,5 +1,13 @@
 (ns tsp-viz.domacro)
 
+(defmacro round-to 
+  "Rounds number to places decimal places"
+  [number places]
+  (let [multiplier-form `(Math/pow 10 ~places)
+        multiplier (if (number? places) (eval multiplier-form) multiplier-form)]
+    `(let [multiplier# ~multiplier]
+       (* (float (~'Math/round (* ~number multiplier#))) (float (/ 1 multiplier#))))))
+
 (defmacro do-graph 
   "Executes body for every member of graph in path order. The result of each 
   iteration is bound to result each next iteration, so a return value can be 

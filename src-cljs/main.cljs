@@ -10,8 +10,10 @@
   "Distance between two points on a two dimensional plane"
   [{x1 :x y1 :y}
    {x2 :x y2 :y}]
-  (Math/sqrt (+ (Math/pow (- x1 x2) 2)
-                (Math/pow (- y1 y2) 2))))
+  (domacro/round-to
+   (Math/sqrt (+ (Math/pow (- x1 x2) 2)
+                 (Math/pow (- y1 y2) 2)))
+   2))
 
 (defn rotate-path 
   "Given a route represented by a sequence of points, arrange them so point 1 comes first."
@@ -21,9 +23,11 @@
 (defn path-distance
   "Compute distance of a path"
   [path]
-  (reduce + (map #(apply distance %) 
-                 (conj (partition 2 1 path) 
-                       (list (first path) (last path))))))
+  (domacro/round-to
+   (reduce + (map #(apply distance %) 
+                  (conj (partition 2 1 path) 
+                        (list (first path) (last path)))))
+   2))
 
 (defn nth-and-rest [index seq]
   (vector (nth seq index) (into (take index seq) (drop (inc index) seq))))
@@ -245,8 +249,8 @@
 
 (defn print-path-html-row [name path iteration]
   (str "<th>" (clojure.string/capitalize name) "</th>"
-       "<td>" (/ (Math/round (* 100 (path-distance path))) 100) "</td>"
-       "<td>" iteration "</td>") )
+       "<td>" (path-distance path) "</td>"
+       "<td>" iteration "</td>"))
 
 (defn print-paths [path-names paths iterations colors callback]
   (let [paths (map #(hash-map :name %1 :path %2 :iteration %3 :color %4)
@@ -328,5 +332,4 @@
                                     (print-circles @points)
                                     (animate-paths (exhaust-permutations-less-head 
                                                     @points))))))
-
 
