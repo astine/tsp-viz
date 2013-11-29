@@ -1,6 +1,6 @@
 # tsp-viz
 
-A Clojure library designed to ... well, that part is up to you.
+This is the source code to a TSP visualization which you can see [here](http://theatticlight.net/tsp).
 
 ## Usage
 
