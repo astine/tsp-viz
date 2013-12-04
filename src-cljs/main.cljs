@@ -6,12 +6,33 @@
   (if ((or comp >) ((or pred identity) x) ((or pred identity) y))
     x y))
 
+(defn human-readable-interval [seconds]
+	(cond (> 60 seconds)
+	      (str seconds " Seconds")
+	      (> 3600 seconds)
+	      (str (Math/round (/ seconds 60)) " Minutes")
+	      (> 86400 seconds)
+	      (str (Math/round (/ seconds 3600)) " Hours")
+	      (> 604800 seconds)
+	      (str (Math/round (/ seconds 86400)) " Days")
+	      (> 2419200 seconds)
+	      (str (Math/round (/ seconds 604800)) " Weeks")
+	      (> 31449600 seconds)
+	      (str (Math/round (/ seconds 2419200)) " Months")
+              :else
+	      (str (Math/round (/ seconds 31449600)) " Years")))
+
+(defn factorial [number]
+  (reduce * (range 1 (inc number))))
+
 (defn distance
   "Distance between two points on a two dimensional plane"
   [{x1 :x y1 :y}
    {x2 :x y2 :y}]
-  (Math/sqrt (+ (Math/pow (- x1 x2) 2)
-                (Math/pow (- y1 y2) 2))))
+  (domacro/round-to
+   (Math/sqrt (+ (Math/pow (- x1 x2) 2)
+                 (Math/pow (- y1 y2) 2)))
+   2))
 
 (defn rotate-path 
   "Given a route represented by a sequence of points, arrange them so point 1 comes first."
@@ -21,9 +42,11 @@
 (defn path-distance
   "Compute distance of a path"
   [path]
-  (reduce + (map #(apply distance %) 
-                 (conj (partition 2 1 path) 
-                       (list (first path) (last path))))))
+  (domacro/round-to
+   (reduce + (map #(apply distance %) 
+                  (conj (partition 2 1 path) 
+                        (list (first path) (last path)))))
+   2))
 
 (defn nth-and-rest [index seq]
   (vector (nth seq index) (into (take index seq) (drop (inc index) seq))))
@@ -196,7 +219,6 @@
 ;            (recur path x (inc y))))
 ;    path))
 
-
 (def points (atom #{}))
 
 (def point-states (atom '()))
@@ -246,8 +268,8 @@
 
 (defn print-path-html-row [name path iteration]
   (str "<th>" (clojure.string/capitalize name) "</th>"
-       "<td>" (/ (Math/round (* 100 (path-distance path))) 100) "</td>"
-       "<td>" iteration "</td>") )
+       "<td>" (path-distance path) "</td>"
+       "<td>" iteration "</td>"))
 
 (defn print-paths [path-names paths iterations colors callback]
   (let [paths (map #(hash-map :name %1 :path %2 :iteration %3 :color %4)
@@ -291,11 +313,17 @@
                       (.selectAll "path")
                       (.style "stroke" "green"))))))
 
-(defn path-animation-step [paths iterator previous-best previous-iteration]
+(defn path-animation-step [paths iterator previous-best previous-iteration est-iterations]
   (if-let [paths (seq paths)]
     (let [best-path (greater (first paths)
                              previous-best
                              < path-distance)]
+      (-> (d3/select "table#demo-stats tbody")
+          (rebind-all "tr" [[est-iterations 
+                             (human-readable-interval 
+                              (- est-iterations (dec (first iterator))))]])
+          (.html (fn [[comp time]]
+                 (str "<td>" comp "</td><td>" time "</td>"))))
       (print-paths ["bestyet" "working"]
                    [best-path (first paths)]
                    [previous-iteration (first iterator)]
@@ -303,18 +331,23 @@
                    #(path-animation-step 
                      (rest paths) (rest iterator) best-path
                      (if (= best-path previous-best) 
-                       previous-iteration (first iterator)))))
+                       previous-iteration (first iterator))
+                     est-iterations)))
     (end-path-animation previous-best previous-iteration)))
 
-(defn animate-paths [paths]
+(defn animate-paths [paths estimated-complexity]
   (when-let [paths (seq paths)]
+    (-> (d3/select "table#demo-stats tbody")
+        (rebind-all "tr" [[estimated-complexity (human-readable-interval estimated-complexity)]])
+        (.html (fn [[comp time]]
+                 (str "<td>" comp "</td><td>" time "</td>"))))
     (print-paths ["bestyet" "working"]
                  [(first paths) (first paths)]
                  [1 1]
                  ["red" "blue"]
                  #(path-animation-step 
                    (rest paths) (iterate inc 2) 
-                   (first paths) 1))))
+                   (first paths) 1 estimated-complexity))))
 
 (def svg (-> (d3/select "svg#field")
              (.on "click" #(this-as event 
@@ -323,6 +356,5 @@
                                             :y (int (second (d3/mouse event)))})
                                     (print-circles @points)
                                     (animate-paths (exhaust-permutations-less-head 
-                                                    @points))))))
-
+                                                    @points) (factorial (dec (count @points))))))))
 

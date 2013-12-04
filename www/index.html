@@ -41,10 +41,25 @@
 	      <tbody>
 	      </tbody>
 	    </table>
+	    <table id="demo-stats">
+	      <thead>
+		<tr><th>Est. # of Iterations</th><th>Est. Time Left</th></tr>
+	      </thead>
+	      <tbody>
+	      </tbody>
+	    </table>
 	  </div>
 	  <div id="description-text">
-	    <p>This is a demo of the TSP problem. Here is some info about the TSP problem.</p>
+	    <p>The <a href="http://en.wikipedia.org/wiki/Traveling_salesman_problem">Traveling Salesman Problem</a> is one of the classic problems of computer science. Conceptually, it's simple: given a set of locations, what is the shortest possible round trip through them? However, this problem is known to be extremely difficult. It is <a href="http://en.wikipedia.org/wiki/NP-hard">NP-Hard</a>.</p>
+	    <p>Fundamentally, the TSP is a problem in combinatorics. Every possible solution to the problem is just another permutation of the input locations. For a given set of inputs N, there are n! (<a href="http://en.wikipedia.org/wiki/Factorial">factorial</a>) possible solutions. That is, if you have n=5 locations, you will have n*(n-1)*(n-2)...1 = 5*4*3*2*1 = 120 possible routes through them. This means the as the number of locations grows, the problem grows in complexity at a much faster rate. With only five locations their are only 120 solutions to examine, while with six locations you have 6!=720. 10!=3,628,800 and 15!=1,307,674,368,000. By the time one reaches only twenty locations, the problem has grown to a size beyond which most computers can handle.</p>
+
+	    <p>For this reason, attempts to solve the TSP usually use heuristics in an attempt to guess at a good enough solution rather than exhaustively induce the best solution. The TSP common fodder for different heuristics such as Simulated Annealing and the Tabu Search.</p>
+
+	    <p>This page presents a demonstration of an exhaustive attempt at the TSP. Simply click on the field to add points to sort. You'll find that before you've added very many, the time to solve the problem will have grown larger than you'll have time for which to wait.</p>
 	    <div class="press"></div>
+	  </div>
+	  <div id="footer">
+	    Site and design &copy; Andrew Stine 2013<br>Contact: <a href='mailto:&#115;&#116;&#105;&#110;&#101;.&#100;&#114;&#101;&#119;@&#116;&#104;&#101;&#97;&#116;&#116;&#105;&#99;&#108;&#105;&#103;&#104;&#116;.&#110;&#101;&#116;'>&#115;&#116;&#105;&#110;&#101;.&#100;&#114;&#101;&#119;@&#116;&#104;&#101;&#97;&#116;&#116;&#105;&#99;&#108;&#105;&#103;&#104;&#116;.&#110;&#101;&#116;</a><br>Find me at: <a href="http://theatticlight.net">The Attic Light</a>
 	  </div>
 	</div>
 
