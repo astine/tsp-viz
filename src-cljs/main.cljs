@@ -252,7 +252,6 @@
 (defn print-paths [path-names paths iterations colors callback]
   (let [paths (map #(hash-map :name %1 :path %2 :iteration %3 :color %4)
                    path-names paths iterations colors)]
-    (console/log (str paths))
     (doseq [{:keys [name path color]} (butlast paths)]
       (-> (d3/select "svg#field")
           (.select (str "path#" name))
@@ -274,7 +273,6 @@
         
 
 (defn end-path-animation [path iteration]
-  (console/log "end animation")
   (-> (d3/select "svg#field")
       (.select "path#bestyet")
       (.style "stroke" "red")
@@ -298,7 +296,6 @@
     (let [best-path (greater (first paths)
                              previous-best
                              < path-distance)]
-      (console/log "Part animation")
       (print-paths ["bestyet" "working"]
                    [best-path (first paths)]
                    [previous-iteration (first iterator)]
@@ -311,7 +308,6 @@
 
 (defn animate-paths [paths]
   (when-let [paths (seq paths)]
-    (console/log "Start animation")
     (print-paths ["bestyet" "working"]
                  [(first paths) (first paths)]
                  [1 1]
@@ -325,7 +321,6 @@
                                     (swap! points conj 
                                            {:x (int (first (d3/mouse event)))
                                             :y (int (second (d3/mouse event)))})
-                                    (console/log (str @points))
                                     (print-circles @points)
                                     (animate-paths (exhaust-permutations-less-head 
                                                     @points))))))
